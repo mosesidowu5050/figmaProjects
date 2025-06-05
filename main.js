@@ -1,3 +1,31 @@
+// Register resident
+function registerResident() {
+  const body = {
+    fullName: document.getElementById("fullName").value.trim(),
+    email: document.getElementById("email").value.trim(),
+    phoneNumber: document.getElementById("phoneNumber").value.trim(),
+    homeAddress: document.getElementById("homeAddress").value.trim(),
+    password: document.getElementById("password").value.trim()
+  };
+
+  fetch("http://localhost:8080/api/resident/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  })
+  .then(res => res.json())
+  .then(apiResponse => {
+    const result = document.getElementById("registrationResult");
+    result.innerHTML = apiResponse.success ?
+      `<span style='color:green;'>✔ ${apiResponse.data.fullName} registered</span>` :
+      `<span style='color:red;'>❌ ${apiResponse.data}</span>`;
+  })
+  .catch(error => {
+    document.getElementById("registrationResult").innerHTML = `<span style='color:red;'>❌ ${error.message}</span>`;
+  });
+}
+
+// Get list of visitors
 function getVisitors() {
   fetch("http://localhost:8080/api/resident/listsOfVisitors")
     .then(response => response.json())
@@ -26,8 +54,7 @@ function getVisitors() {
     });
 }
 
-
-
+// Find access token
 function findAccessToken() {
   const token = document.getElementById("visitorIdInput").value.trim();
   if (!token) {
@@ -68,5 +95,40 @@ function findAccessToken() {
   .catch(error => {
     const resultDiv = document.getElementById("accessTokenResult");
     resultDiv.innerHTML = `<span style="color:red;">❌ Error: ${error.message}</span>`;
+  });
+}
+
+// Generate access token
+function generateAccessToken() {
+  const requestBody = {
+    residentName: document.getElementById("residentName").value.trim(),
+    residentPhoneNumber: document.getElementById("residentPhoneNumber").value.trim(),
+    visitorsName: document.getElementById("visitorsName").value.trim(),
+    visitorsPhoneNumber: document.getElementById("visitorsPhoneNumber").value.trim(),
+    visitorsAddress: document.getElementById("visitorsAddress").value.trim()
+  };
+
+  fetch("http://localhost:8080/api/resident/generate/code", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(requestBody)
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(err => Promise.reject(err));
+    }
+    return response.json();
+  })
+  .then(apiResponse => {
+    const result = document.getElementById("tokenGenerateResult");
+    if (apiResponse.success) {
+      // Use otpCode instead of token
+      result.innerHTML = `<span style='color:green;'>✔ Token Generated: ${apiResponse.data.otpCode}</span>`;
+    } else {
+      result.innerHTML = `<span style='color:red;'>❌ ${apiResponse.data}</span>`;
+    }
+  })
+  .catch(error => {
+    document.getElementById("tokenGenerateResult").innerHTML = `<span style='color:red;'>❌ ${error.message || JSON.stringify(error)}</span>`;
   });
 }
